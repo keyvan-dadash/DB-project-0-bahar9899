@@ -64,4 +64,8 @@ public class Artist {
     public void setArtistFilms(List<String> artistFilms) {
         this.artistFilms = artistFilms;
     }
+
+    public long getIndex() {
+        return index;
+    }
 }

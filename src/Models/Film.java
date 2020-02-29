@@ -78,4 +78,8 @@ public class Film {
         }
         this.genre = genre;
     }
+
+    public long getIndex() {
+        return index;
+    }
 }
