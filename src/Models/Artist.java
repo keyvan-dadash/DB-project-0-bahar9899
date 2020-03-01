@@ -17,6 +17,7 @@ public class Artist {
 
 
     public Artist(int artistID, int age, String artistName, List<String> artistFilms) throws Exception{
+        this.index = Globalindex;
         this.setArtistID(artistID);
         this.setAge(age);
         this.setArtistName(artistName);
@@ -40,7 +41,7 @@ public class Artist {
     }
 
     public void setAge(int age) throws AgeException {
-        if(age < 1000 || age > 9999){
+        if(age < 1 || age > 999){
             throw new AgeException("Age must be 3 number");
         }
         this.age = age;
