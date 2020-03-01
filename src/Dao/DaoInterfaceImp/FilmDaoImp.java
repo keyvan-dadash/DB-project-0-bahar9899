@@ -103,6 +103,8 @@ public class FilmDaoImp implements Dao<Film> {
 
     @Override
     public void update(Film film) {
+        if (findByID(String.valueOf(film.getFilmID())) == null)
+            System.err.println("This Film does not Exist");
         String newFilm = new String();
         newFilm += String.valueOf(film.getIndex()) + '-';
         newFilm += String.valueOf(film.getFilmID()) + '/';
