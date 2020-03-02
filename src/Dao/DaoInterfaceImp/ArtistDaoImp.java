@@ -17,7 +17,7 @@ public class ArtistDaoImp implements Dao<Artist> {
     private String pathForArtistID;
     private String pathForArtistName;
     private HashMap<Integer , Integer> indexByArtistID = new HashMap<>();
-    private HashMap<String , Integer> indexByArtistName = new HashMap<>();
+    private HashMap<String , String> indexByArtistName = new HashMap<>();
 
     //fuck check this dublicate name
     public ArtistDaoImp(String path, String pathForArtistID, String pathForArtistName) {
@@ -41,8 +41,9 @@ public class ArtistDaoImp implements Dao<Artist> {
             while ((line = bufferedReaderID.readLine()) != null) {
                 indexByArtistID.put(Integer.parseInt(line.split("->")[0]), Integer.parseInt(line.split("->")[1]));
             }
+
             while ((line = bufferedReaderName.readLine()) != null) {
-                indexByArtistName.put(line.split("->")[0], Integer.parseInt(line.split("->")[1]));
+                indexByArtistName.put(line.split("->")[0], line.split("->")[1]);
             }
         }catch (IOException ex){
             ex.printStackTrace();
@@ -82,7 +83,14 @@ public class ArtistDaoImp implements Dao<Artist> {
                 indexByArtistID.put(Integer.valueOf(line.split("/")[0].split("-")[1]), locallines);
                 bufferedWriterName.write(line.split("/")[1] + "->" + String.valueOf(locallines));
                 bufferedWriterName.newLine();
-                indexByArtistName.put(line.split("/")[1], locallines);
+                if (indexByArtistName.containsKey(line.split("/")[1])){
+                    String liness = indexByArtistName.get(line.split("/")[1]);
+                    liness += ";" + String.valueOf(locallines);
+                    indexByArtistName.replace(line.split("/")[1], liness);
+                    locallines++;
+                    continue;
+                }
+                indexByArtistName.put(line.split("/")[1], String.valueOf(locallines));
                 locallines++;
             }
         }catch (IOException ex){
@@ -145,7 +153,13 @@ public class ArtistDaoImp implements Dao<Artist> {
             bufferedWriter.write(line);
             bufferedWriter.newLine();
             indexByArtistID.put(artist.getArtistID(), (int) lines);
-            indexByArtistName.put(artist.getArtistName(), (int) lines);
+            if (indexByArtistName.containsKey(artist.getArtistName())){
+                String liness = indexByArtistName.get(artist.getArtistName());
+                liness += ";" + String.valueOf(lines);
+                indexByArtistName.replace(line.split("/")[1], liness);
+            }else{
+                indexByArtistName.put(artist.getArtistName(), String.valueOf(lines));
+            }
             lines++;
         }catch (IOException e) {
             e.printStackTrace();
@@ -261,15 +275,27 @@ public class ArtistDaoImp implements Dao<Artist> {
 
     @Override
     public List<Artist> findByName(String name) {
-        String line;
         List<Artist> artists = new ArrayList<>();
         BufferedReader bufferedReader = null;
         try {
-            File file = new File(path);
-            bufferedReader = new BufferedReader(new FileReader(file));
-            while ((line = bufferedReader.readLine()) != null) {
-                if(line.split("/")[1].contains(name)){
-                    artists.add(stringToArtist(line));
+            if (indexByArtistName.get(name) != null){
+                String str = indexByArtistName.get(name);
+                String[] lines = str.split(";");
+                String artist = null;
+                for (String line:
+                     lines) {
+                    artist = ReadLineHelper.readLine(Long.valueOf(line), path);
+                    artists.add(stringToArtist(artist));
+                }
+            }
+            if (artists.size() == 0){
+                String line;
+                File file = new File(path);
+                bufferedReader = new BufferedReader(new FileReader(file));
+                while ((line = bufferedReader.readLine()) != null) {
+                    if(line.split("/")[1].contains(name)){
+                        artists.add(stringToArtist(line));
+                    }
                 }
             }
         }catch (Exception ex){
@@ -293,15 +319,17 @@ public class ArtistDaoImp implements Dao<Artist> {
         BufferedReader bufferedReader = null;
         try {
             File file = new File(path);
-            /*bufferedReader = new BufferedReader(new FileReader(file));
-            while ((line = bufferedReader.readLine()) != null) {
-                if(line.split("/")[0].split("-")[1].equals(name)){
-                    artists = stringToArtist(line);
-                    break;
-                }
-            }*/
             if (indexByArtistID.get(Integer.valueOf(name)) != null)
                 artists = stringToArtist(ReadLineHelper.readLine(indexByArtistID.get(Integer.valueOf(name)), path));
+            if (artists == null){
+                bufferedReader = new BufferedReader(new FileReader(file));
+                while ((line = bufferedReader.readLine()) != null) {
+                    if(line.split("/")[0].split("-")[1].equals(name)){
+                        artists = stringToArtist(line);
+                        break;
+                    }
+                }
+            }
         }catch (Exception ex){
             ex.printStackTrace();
             System.err.println("From ArtistDao(FindByIDMethod): " + ex.getMessage());

@@ -11,7 +11,7 @@ import java.util.List;
 public class main {
 
     public static void main(String[] args) throws Exception {
-        String path = "./Artist.txt";
+        /*String path = "./Artist.txt";
         String pathid = "./ArtistIDIndex.txt";
         String pathname = "./ArtistNameIndex.txt";
         Dao<Artist> artistdao = new ArtistDaoImp(path, pathid, pathname);
@@ -36,8 +36,8 @@ public class main {
                 System.out.println(str);
             }
             System.out.println("-----------------------------------------------------");
-        }
-        /*String path = "./Artist.txt";
+        }*/
+        String path = "./Artist.txt";
         String pathid = "./ArtistIDIndex.txt";
         String pathname = "./ArtistNameIndex.txt";
         String path1 = "./Film.txt";
@@ -61,10 +61,10 @@ public class main {
         Film film = new Film(4444, "dfjkd", "sdfkjj", 1397, "sdf");
         Film film1 = new Film(3312, "dddkk", "zczcz", 1398, "bnbv");
         Film film2 = new Film(1111, "oiliol", "qweq", 1399, "uyi");
-        artistdao.save(artist);
         artistdao.save(artist1);
+        artistdao.save(artist);
         artistdao.save(artist2);
-        artistdao.deleteItem(3333);
+        //artistdao.deleteItem(3333);
         Artist artist5 = new Artist(5455, 55,"s34wefffdsff", films);
         artistdao.save(artist5);
         filmdao.save(film);
@@ -98,7 +98,7 @@ public class main {
                 System.out.println(str);
             }
             System.out.println("-----------------------------------------------------");
-        }*/
+        }
 
 
 
