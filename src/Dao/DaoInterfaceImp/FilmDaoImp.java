@@ -12,8 +12,10 @@ import java.util.List;
 public class FilmDaoImp implements Dao<Film> {
 
     private String path;
+    private String pathArtistFilms;
 
-    public FilmDaoImp(String path) {
+    public FilmDaoImp(String path, String pathArtistFilms) {
+        this.pathArtistFilms = pathArtistFilms;
         this.path = path;
     }
 

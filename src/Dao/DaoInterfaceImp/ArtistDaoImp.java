@@ -4,6 +4,7 @@ import Dao.DaoInterface.Dao;
 import Exceptions.ArtistExceptions.DuplicateAtristException;
 import IOHelper.ReadLineHelper;
 import Models.Artist;
+import Models.Film;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,16 +17,18 @@ public class ArtistDaoImp implements Dao<Artist> {
     private long lines = 1;
     private String pathForArtistID;
     private String pathForArtistName;
+    private String pathForArtistAndFilm;
     private HashMap<Integer , Integer> indexByArtistID = new HashMap<>();
     private HashMap<String , String> indexByArtistName = new HashMap<>();
     private FilmDaoImp filmDaoImp;
 
     //fuck check this dublicate name
-    public ArtistDaoImp(String path, String pathForArtistID, String pathForArtistName, FilmDaoImp filmDaoImp) {
+    public ArtistDaoImp(String path, String pathForArtistID, String pathForArtistName, FilmDaoImp filmDaoImp, String pathForArtistAndFilm) {
         this.path = path;
         this.filmDaoImp = filmDaoImp;
         this.pathForArtistID = pathForArtistID;
         this.pathForArtistName = pathForArtistName;
+        this.pathForArtistAndFilm = pathForArtistAndFilm;
         BufferedReader bufferedReaderID = null;
         BufferedReader bufferedReaderName = null;
         obtainIndex();
@@ -116,6 +119,117 @@ public class ArtistDaoImp implements Dao<Artist> {
         }
     }
 
+    private void insertArtistFilms(Artist artist){
+        File file;
+        BufferedWriter bufferedWriter = null;
+        try{
+            file = new File(pathForArtistAndFilm);
+            bufferedWriter = new BufferedWriter(new FileWriter(file, true));
+            //Film film;
+            for (String str:
+                 artist.getArtistFilms()) {
+                for (Film film:
+                     filmDaoImp.findByName(str)) {
+                    bufferedWriter.write(String.valueOf(film.getFilmID()) + "/" + String.valueOf(artist.getArtistID()));
+                    bufferedWriter.newLine();
+                }
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }finally {
+            if(bufferedWriter!=null){
+                try {
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void deleteArtistFilms(int ID){
+        BufferedReader bufferedReader = null;
+        BufferedWriter bufferedWriter = null;
+        boolean flag = true;
+        try {
+            String line;
+            File file = new File(pathForArtistAndFilm);
+            File tempfile = new File("tempfordeleteArtistFilms.txt");
+            bufferedReader = new BufferedReader(new FileReader(file));
+            bufferedWriter = new BufferedWriter(new FileWriter(tempfile));
+            while ((line = bufferedReader.readLine()) != null) {
+                if(!line.split("/")[1].equals(String.valueOf(ID))){
+                    bufferedWriter.write(line);
+                    bufferedWriter.newLine();
+                }
+            }
+            bufferedReader.close();
+            bufferedWriter.close();
+            if(!file.delete()) throw new Exception("Deleting File " + pathForArtistAndFilm + " Operation unsuccessfully");
+            if(!tempfile.renameTo(new File(pathForArtistAndFilm))) throw new Exception("Renaming File Temp TO " + pathForArtistAndFilm + " Operation Unsuccessfully");
+            flag = false;
+        }catch (Exception ex){
+            System.err.println("From ArtistDao(DeleteArtistFilmsMethod): " + ex.getMessage());
+        }finally {
+            try {
+                if(bufferedReader != null && flag){
+                    bufferedReader.close();
+                }
+                if(bufferedWriter != null && flag){
+                    bufferedWriter.close();
+                }
+                if (bufferedReader != null && bufferedWriter != null && !flag){
+                    updateIndex();
+                }
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void updateArtistFilms(Artist artist, int ID){
+        String line;
+        boolean flag = true;
+        BufferedReader bufferedReader = null;
+        BufferedWriter bufferedWriter = null;
+        try {
+            File file = new File(pathForArtistAndFilm);
+            File tempfile = new File("tempforupdateartistfilms.txt");
+            bufferedReader = new BufferedReader(new FileReader(file));
+            bufferedWriter = new BufferedWriter(new FileWriter(tempfile));
+            while ((line = bufferedReader.readLine()) != null) {
+                if(!line.split("/")[1].equals(String.valueOf(ID))){
+                    bufferedWriter.write(line);
+                    bufferedWriter.newLine();
+                }else{
+                    bufferedWriter.write(line.split("/")[0] + "/" + artist.getArtistID());
+                    bufferedWriter.newLine();
+                }
+            }
+            bufferedReader.close();
+            bufferedWriter.close();
+            if(!file.delete()) throw new Exception("Deleting File " + pathForArtistAndFilm + " Operation unsuccessfully");
+            if(!tempfile.renameTo(new File(pathForArtistAndFilm))) throw new Exception("Renaming File Temp TO " + pathForArtistAndFilm + " Operation Unsuccessfully");
+            flag = false;
+        }catch (Exception ex){
+            System.err.println("From ArtistDao(UpdateArtistFilmsMethod): " + ex.getMessage());
+        }finally {
+            try {
+                if(bufferedReader != null && flag){
+                    bufferedReader.close();
+                }
+                if(bufferedWriter != null && flag){
+                    bufferedWriter.close();
+                }
+                if (bufferedReader != null && bufferedWriter != null && !flag){
+                    updateIndex();
+                }
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
     private Artist stringToArtist(String str) throws Exception {
         String[] array = str.split("/");
         int index = Integer.valueOf(array[0].split("-")[0]);
@@ -170,6 +284,7 @@ public class ArtistDaoImp implements Dao<Artist> {
                 indexByArtistName.put(artist.getArtistName(), String.valueOf(lines));
             }
             lines++;
+            insertArtistFilms(artist);
         }catch (IOException e) {
             e.printStackTrace();
         }catch (DuplicateAtristException ax) {
@@ -178,6 +293,7 @@ public class ArtistDaoImp implements Dao<Artist> {
             if(bufferedWriter != null){
                 try {
                     bufferedWriter.close();
+                    updateIndex();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -214,6 +330,7 @@ public class ArtistDaoImp implements Dao<Artist> {
             flag = false;
             updateIndex();
             lines--;
+            deleteArtistFilms(ID);
         }catch (Exception ex){
             System.err.println("From ArtistDao(DeleteItemMethod): " + ex.getMessage());
         }finally {
@@ -269,6 +386,7 @@ public class ArtistDaoImp implements Dao<Artist> {
             if(!file.delete()) throw new Exception("Deleting File " + path + " Operation unsuccessfully");
             if(!tempfile.renameTo(new File(path))) throw new Exception("Renaming File Temp TO " + path + " Operation Unsuccessfully");
             flag = false;
+            updateArtistFilms(artist, prevID);
         }catch (Exception ex){
             System.err.println("From ArtistDao(UpdateMethod): " + ex.getMessage());
         }finally {
@@ -278,6 +396,9 @@ public class ArtistDaoImp implements Dao<Artist> {
                 }
                 if(bufferedWriter != null && flag){
                     bufferedWriter.close();
+                }
+                if (bufferedReader != null && bufferedWriter != null && !flag){
+                    updateIndex();
                 }
             }catch (IOException ex){
                 ex.printStackTrace();
