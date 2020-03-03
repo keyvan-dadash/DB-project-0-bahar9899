@@ -18,10 +18,12 @@ public class ArtistDaoImp implements Dao<Artist> {
     private String pathForArtistName;
     private HashMap<Integer , Integer> indexByArtistID = new HashMap<>();
     private HashMap<String , String> indexByArtistName = new HashMap<>();
+    private FilmDaoImp filmDaoImp;
 
     //fuck check this dublicate name
-    public ArtistDaoImp(String path, String pathForArtistID, String pathForArtistName) {
+    public ArtistDaoImp(String path, String pathForArtistID, String pathForArtistName, FilmDaoImp filmDaoImp) {
         this.path = path;
+        this.filmDaoImp = filmDaoImp;
         this.pathForArtistID = pathForArtistID;
         this.pathForArtistName = pathForArtistName;
         BufferedReader bufferedReaderID = null;
@@ -139,6 +141,13 @@ public class ArtistDaoImp implements Dao<Artist> {
             if (findByID(String.valueOf(artist.getArtistID())) != null){
                 throw new DuplicateAtristException("This Artist Already Exist");
             }
+            for (String films:
+                 artist.getArtistFilms()) {
+                if (filmDaoImp.findByName(films).size() == 0){
+                    System.err.println(films + " Does Not Exist");
+                    return;
+                }
+            }
             file = new File(path);
             bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             String line = new String();
@@ -164,7 +173,7 @@ public class ArtistDaoImp implements Dao<Artist> {
         }catch (IOException e) {
             e.printStackTrace();
         }catch (DuplicateAtristException ax) {
-            System.err.println(ax);
+            System.err.println("From ArtistDaoImp(SaveMethod): " + ax);
         } finally {
             if(bufferedWriter != null){
                 try {
@@ -222,9 +231,12 @@ public class ArtistDaoImp implements Dao<Artist> {
     }
 
     @Override
-    public void update(Artist artist) {
-        if (findByID(String.valueOf(artist.getArtistID())) == null)
-            System.err.println("This Artist does not Exist");
+    public void update(Artist artist, int prevID) {
+        if (findByID(String.valueOf(artist.getArtistID())) != null)
+            System.err.println("From ArtistDao(UpdateMethod): This Artist Already Exist");
+        if(findByID(String.valueOf(prevID)) == null){
+            System.err.println("This Artist Does Not Exist");
+        }
         String newArtist = new String();
         newArtist += String.valueOf(artist.getIndex()) + '-';
         newArtist += String.valueOf(artist.getArtistID()) + '/';
@@ -244,7 +256,7 @@ public class ArtistDaoImp implements Dao<Artist> {
             bufferedReader = new BufferedReader(new FileReader(file));
             bufferedWriter = new BufferedWriter(new FileWriter(tempfile));
             while ((line = bufferedReader.readLine()) != null) {
-                if(!line.split("/")[0].split("-")[1].equals(String.valueOf(artist.getArtistID()))){
+                if(!line.split("/")[0].split("-")[1].equals(String.valueOf(prevID))){
                     bufferedWriter.write(line);
                     bufferedWriter.newLine();
                 }else{

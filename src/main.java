@@ -50,8 +50,8 @@ public class main {
         File file3 = new File(pathname);
         file3.createNewFile();
         List<String> films = new ArrayList<>();
-        Dao<Artist> artistdao = new ArtistDaoImp(path, pathid, pathname);
         Dao<Film> filmdao = new FilmDaoImp(path1);
+        Dao<Artist> artistdao = new ArtistDaoImp(path, pathid, pathname, (FilmDaoImp) filmdao);
         films.add("dff");
         films.add("ddww");
         films.add("dwrwf");
@@ -70,10 +70,10 @@ public class main {
         filmdao.save(film);
         filmdao.save(film1);
         filmdao.save(film2);
-        Artist artist3 = new Artist(5463,15,"sdfsfffffffff", films);
+        Artist artist3 = new Artist(5467,15,"sdfsfffffffff", films);
         Film film3 = new Film(1111, "dlj", "qweq", 1379, "uyi");
-        artistdao.update(artist3);
-        filmdao.update(film3);
+        artistdao.update(artist3, 5463);
+        filmdao.update(film3, 1111);
 
         artistdao.save(artist3);
         artistdao.save(artist3);
@@ -85,7 +85,7 @@ public class main {
         filmdao.save(film6);
         Film film7 = new Film(1113, "bbwee", "3ok3", 1366, "uyi");
         filmdao.deleteItem(1113);
-        filmdao.update(film7);
+        filmdao.update(film7, 1114);
         List<Artist> art = artistdao.findByName("hal");
         for (Artist artist4:
              art) {

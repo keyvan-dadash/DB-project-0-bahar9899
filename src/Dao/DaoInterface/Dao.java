@@ -7,7 +7,7 @@ public interface Dao<T> {
 
     void save(T t);
     void deleteItem(int ID);
-    void update(T t);
+    void update(T t, int prevID);
     List<T> findByName(String name);
     T findByID(String name);
 }

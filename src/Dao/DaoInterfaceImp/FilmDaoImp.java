@@ -49,7 +49,7 @@ public class FilmDaoImp implements Dao<Film> {
         }catch (IOException e) {
             e.printStackTrace();
         }catch (DuplicateFilmException fx) {
-            System.err.println(fx);
+            System.err.println("From FilmDao(Save Method): " + fx);
         }finally {
             if (bufferedWriter != null){
                 try {
@@ -102,9 +102,12 @@ public class FilmDaoImp implements Dao<Film> {
     }
 
     @Override
-    public void update(Film film) {
-        if (findByID(String.valueOf(film.getFilmID())) == null)
-            System.err.println("This Film does not Exist");
+    public void update(Film film, int prevID) {
+        if (findByID(String.valueOf(film.getFilmID())) != null)
+            System.err.println("From FilmDao(UpdateMethod): This Film Already Exist");
+        if (findByID(String.valueOf(prevID)) == null){
+            System.err.println("This Film Does Not Exist");
+        }
         String newFilm = new String();
         newFilm += String.valueOf(film.getIndex()) + '-';
         newFilm += String.valueOf(film.getFilmID()) + '/';
@@ -122,7 +125,7 @@ public class FilmDaoImp implements Dao<Film> {
             bufferedReader = new BufferedReader(new FileReader(file));
             bufferedWriter = new BufferedWriter(new FileWriter(tempfile));
             while ((line = bufferedReader.readLine()) != null) {
-                if(!line.split("/")[0].split("-")[1].equals(String.valueOf(film.getFilmID()))){
+                if(!line.split("/")[0].split("-")[1].equals(String.valueOf(prevID))){
                     bufferedWriter.write(line);
                     bufferedWriter.newLine();
                 }else{
