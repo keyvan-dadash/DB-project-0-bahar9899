@@ -13,12 +13,83 @@ public class FilmDaoImp implements Dao<Film> {
 
     private String path;
     private String pathArtistFilms;
+    private String pathArtistFile;
 
-    public FilmDaoImp(String path, String pathArtistFilms) {
+    public FilmDaoImp(String path, String pathArtistFilms, String pathArtisFile) {
         this.pathArtistFilms = pathArtistFilms;
         this.path = path;
+        this.pathArtistFile = pathArtisFile;
     }
 
+    private void updateAndDeleteArtistFilms(Film film, int prevID, String prevName, boolean delete){
+        BufferedReader bufferedReaderArtistFile = null;
+        BufferedWriter bufferedWriterArtistFile = null;
+        BufferedReader bufferedReaderArtistFilmFile = null;
+        BufferedWriter bufferedWriterArtistFilmFile = null;
+        String line;
+        boolean flag = true;
+        try{
+            File fileartistfile = new File(pathArtistFile);
+            File tempartistfile = new File("./tempforartistfileupdatefilms.txt");
+            bufferedReaderArtistFile = new BufferedReader(new FileReader(fileartistfile));
+            bufferedWriterArtistFile = new BufferedWriter(new FileWriter(tempartistfile, true));
+            while ((line = bufferedReaderArtistFile.readLine()) != null) {
+                bufferedWriterArtistFile.write(line.substring(0, line.lastIndexOf("/") + 1));
+                for (String strfilm:
+                        line.split("/")[3].split(",")) {
+                    if(!strfilm.equals(prevName)){
+                        bufferedWriterArtistFile.write(strfilm + ",");
+                        continue;
+                    }
+                    else if (!delete){
+                        bufferedWriterArtistFile.write(film.getFilmName() + ',');
+                    }
+                }
+                bufferedWriterArtistFile.newLine();
+            }
+            bufferedReaderArtistFile.close();
+            bufferedWriterArtistFile.close();
+            if (!fileartistfile.delete()) System.err.println("Operation Deleting " + pathArtistFile + " unsuccessfully");
+            if (!tempartistfile.renameTo(new File(pathArtistFile))) System.err.println("Operation Renaming " + pathArtistFile + " unsuccessfully");
+            //delete and rename file
+            File fileartistfilmfile = new File(pathArtistFilms);
+            File filetempartistfilmfile = new File("./tempforartistfilmfileupdatefilms.txt");
+            bufferedReaderArtistFilmFile = new BufferedReader(new FileReader(fileartistfilmfile));
+            bufferedWriterArtistFilmFile = new BufferedWriter(new FileWriter(filetempartistfilmfile));
+            while ((line = bufferedReaderArtistFilmFile.readLine()) != null) {
+                if(!line.split("/")[0].equals(String.valueOf(prevID))){
+                    bufferedWriterArtistFilmFile.write(line);
+                    bufferedWriterArtistFilmFile.newLine();
+                    continue;
+                }
+                else if (!delete){
+                    bufferedWriterArtistFilmFile.write(String.valueOf(film.getFilmID()) + "/" + line.split("/")[1]);
+                    bufferedWriterArtistFilmFile.newLine();
+                }
+            }
+            //delete and rename file
+            bufferedReaderArtistFilmFile.close();
+            bufferedWriterArtistFilmFile.close();
+            if (!fileartistfilmfile.delete()) System.err.println("Operation Deleting " + pathArtistFilms + " unsuccessfully");
+            if (!filetempartistfilmfile.renameTo(new File(pathArtistFilms))) System.err.println("Operation Renaming " + pathArtistFilms + " unsuccessfully");
+            flag = false;
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }finally {
+            try {
+                if (bufferedReaderArtistFile != null && flag)
+                    bufferedReaderArtistFile.close();
+                if (bufferedWriterArtistFile != null && flag)
+                    bufferedWriterArtistFile.close();
+                if (bufferedReaderArtistFilmFile != null && flag)
+                    bufferedReaderArtistFilmFile.close();
+                if (bufferedWriterArtistFilmFile != null && flag)
+                    bufferedWriterArtistFilmFile.close();
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+    }
 
     private Film stringToFilm(String str) throws Exception {
         String[] array = str.split("/");
@@ -27,7 +98,9 @@ public class FilmDaoImp implements Dao<Film> {
         String director = array[2];
         int year = Integer.valueOf(array[3]);
         String genre = array[4];
-        return new Film(filmID, filmName, director, year, genre);
+        Film film = new Film(filmID, filmName, director, year, genre);
+        film.setIndex(Long.valueOf(array[0].split("-")[0]));
+        return film;
     }
 
     @Override
@@ -69,9 +142,11 @@ public class FilmDaoImp implements Dao<Film> {
         boolean flag = true;
         BufferedReader bufferedReader = null;
         BufferedWriter bufferedWriter = null;
+        Film film = null;
         try {
             if (findByID(String.valueOf(ID)) == null)
                 return;
+            film = findByID(String.valueOf(ID));
             File file = new File(path);
             File tempfile = new File("tempfordeletefilm.txt");
             bufferedReader = new BufferedReader(new FileReader(file));
@@ -97,6 +172,9 @@ public class FilmDaoImp implements Dao<Film> {
                 if (bufferedWriter != null && flag){
                     bufferedWriter.close();
                 }
+                if (film != null){
+                    updateAndDeleteArtistFilms(film, ID, film.getFilmName(), true);
+                }
             }catch (IOException ex){
                 ex.printStackTrace();
             }
@@ -105,11 +183,15 @@ public class FilmDaoImp implements Dao<Film> {
 
     @Override
     public void update(Film film, int prevID) {
-        if (findByID(String.valueOf(film.getFilmID())) != null)
+        if (findByID(String.valueOf(film.getFilmID())) != null) {
             System.err.println("From FilmDao(UpdateMethod): This Film Already Exist");
+            return;
+        }
         if (findByID(String.valueOf(prevID)) == null){
             System.err.println("This Film Does Not Exist");
+            return;
         }
+        Film prevfilm = findByID(String.valueOf(prevID));
         String newFilm = new String();
         newFilm += String.valueOf(film.getIndex()) + '-';
         newFilm += String.valueOf(film.getFilmID()) + '/';
@@ -149,6 +231,9 @@ public class FilmDaoImp implements Dao<Film> {
                 }
                 if (bufferedWriter != null && flag){
                     bufferedWriter.close();
+                }
+                if (prevfilm != null){
+                    updateAndDeleteArtistFilms(film, prevID, prevfilm.getFilmName(), false);
                 }
             }catch (IOException ex){
                 ex.printStackTrace();
