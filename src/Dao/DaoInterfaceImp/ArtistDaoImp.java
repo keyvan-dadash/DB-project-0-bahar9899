@@ -237,9 +237,11 @@ public class ArtistDaoImp implements Dao<Artist> {
         String artistName = array[1];
         int age = Integer.valueOf(array[2]);
         List<String> films = new ArrayList<>();
-        for (String string:
-             array[3].split(",")) {
-            films.add(string);
+        if (array.length != 3){
+            for (String string:
+                    array[3].split(",")) {
+                films.add(string);
+            }
         }
         Artist temp = new Artist(artistID, age, artistName, films);
         temp.setIndex(index);

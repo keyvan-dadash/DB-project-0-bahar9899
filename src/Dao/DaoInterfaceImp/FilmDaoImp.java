@@ -16,11 +16,10 @@ public class FilmDaoImp implements Dao<Film> {
     private String pathArtistFile;
     private ArtistDaoImp artistDaoImp;
 
-    public FilmDaoImp(String path, String pathArtistFilms, String pathArtisFile, ArtistDaoImp artistDaoImp) {
+    public FilmDaoImp(String path, String pathArtistFilms, String pathArtisFile) {
         this.pathArtistFilms = pathArtistFilms;
         this.path = path;
         this.pathArtistFile = pathArtisFile;
-        this.artistDaoImp = artistDaoImp;
     }
 
     private void updateAndDeleteArtistFilms(Film film, int prevID, String prevName, boolean delete){
