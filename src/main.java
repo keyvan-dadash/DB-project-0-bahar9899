@@ -54,8 +54,9 @@ public class main {
         File file4 = new File(pathartfilm);
         file4.createNewFile();
         List<String> films = new ArrayList<>();
-        Dao<Film> filmdao = new FilmDaoImp(path1, pathartfilm, path);
+        Dao<Film> filmdao = new FilmDaoImp(path1, pathartfilm, path, null);
         Dao<Artist> artistdao = new ArtistDaoImp(path, pathid, pathname, (FilmDaoImp) filmdao, pathartfilm);
+        ((FilmDaoImp) filmdao).setArtistDaoImp((ArtistDaoImp) artistdao);
         Film film = new Film(4444, "dfjkd", "sdfkjj", 1397, "sdf");
         Film film1 = new Film(3312, "dddkk", "zczcz", 1398, "bnbv");
         Film film2 = new Film(1111, "oiliol", "qweq", 1399, "uyi");
@@ -106,7 +107,25 @@ public class main {
             }
             System.out.println("-----------------------------------------------------");
         }
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----------------------------------------------------");
 
+        List<String> filmsss = ((FilmDaoImp) filmdao).getAllinfo("dddkk");
+        for (String str:
+             filmsss) {
+            System.out.println(str);
+        }
+        List<String> fhhff = new ArrayList<>();
+        fhhff.add("dddkk");
+        Artist artist4 = new Artist(9999, 77, "sdsjf", fhhff);
+        artistdao.save(artist4);
+        System.out.println("-----------------------------------------------------");
+        System.out.println("-----------------------------------------------------");
+        List<String> filmssss = ((FilmDaoImp) filmdao).getAllinfo("dddkk");
+        for (String str:
+                filmssss) {
+            System.out.println(str);
+        }
 
 
     }

@@ -14,11 +14,13 @@ public class FilmDaoImp implements Dao<Film> {
     private String path;
     private String pathArtistFilms;
     private String pathArtistFile;
+    private ArtistDaoImp artistDaoImp;
 
-    public FilmDaoImp(String path, String pathArtistFilms, String pathArtisFile) {
+    public FilmDaoImp(String path, String pathArtistFilms, String pathArtisFile, ArtistDaoImp artistDaoImp) {
         this.pathArtistFilms = pathArtistFilms;
         this.path = path;
         this.pathArtistFile = pathArtisFile;
+        this.artistDaoImp = artistDaoImp;
     }
 
     private void updateAndDeleteArtistFilms(Film film, int prevID, String prevName, boolean delete){
@@ -294,5 +296,56 @@ public class FilmDaoImp implements Dao<Film> {
             }
         }
         return film;
+    }
+
+    private List<Artist> getArtisOfFilms(Film film){
+        BufferedReader bufferedReader = null;
+        List<Artist> allartist = new ArrayList<>();
+        String line;
+        Artist temp = null;
+        try {
+            File file = new File(pathArtistFilms);
+            bufferedReader = new BufferedReader(new FileReader(file));
+            while ((line = bufferedReader.readLine()) != null) {
+                if(line.split("/")[0].equals(String.valueOf(film.getFilmID()))){
+                    temp =artistDaoImp.findByID(line.split("/")[1]);
+                    allartist.add(temp);
+                }
+            }
+        }catch (Exception ex){
+            System.err.println("From FilmDao(UpdateMethod): " + ex.getMessage());
+        }finally {
+            try {
+                if (bufferedReader != null){
+                    bufferedReader.close();
+                }
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+        return allartist;
+    }
+
+    public List<String> getAllinfo(String name){
+        List<String> allinfo = new ArrayList<>();
+        String query;
+        for (Film film:
+             findByName(name)) {
+            query = film.getFilmName() + "/";
+            for (Artist artist:
+                 getArtisOfFilms(film)) {
+                query += artist.getArtistName() + ",";
+            }
+            query += "/" + film.getDirectorName() + "/";
+            query += String.valueOf(film.getProductionYear()) + "/";
+            query += film.getGenre();
+            allinfo.add(query);
+            query = "";
+        }
+        return allinfo;
+    }
+
+    public void setArtistDaoImp(ArtistDaoImp artistDaoImp) {
+        this.artistDaoImp = artistDaoImp;
     }
 }
